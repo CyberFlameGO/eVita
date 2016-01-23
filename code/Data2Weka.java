@@ -1,30 +1,26 @@
 package me.wiefferink.evita;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Data2Weka {
 
-	public static final String SOURCE_CHF = "C:\\Coding\\DataScience\\eVita\\data\\Logdata CHF tot 20-nov-15 - Data Science.txt";
-	public static final String SOURCE_DM = "C:\\Coding\\DataScience\\eVita\\data\\Logdata DM tot 20-NOV-15 - Data Science.txt";
+	public static final String SOURCE = "C:\\Coding\\DataScience\\eVita\\data\\Logdata DM tot 20-NOV-15 - Data Science.txt";
+	public static final String TARGET = "C:\\Coding\\DataScience\\eVita\\data\\data.arff";
 
-	private Map<String, SortedSet<Action>> chfActions;
-	private Map<String, SortedSet<Session>> chfSessions;
-	private Map<String, SortedSet<Action>> dmActions;
-	private Map<String, SortedSet<Session>> dmSessions;
+	private Map<String, SortedSet<Action>> actions;
+	private Map<String, SortedSet<Session>> sessions;
 
 	private SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
 	public Data2Weka() {
-		chfActions = loadData(SOURCE_CHF);
-		chfSessions = createSessions(chfActions);
-		dmActions = loadData(SOURCE_DM);
-		dmSessions = createSessions(dmActions);
+		actions = loadData(SOURCE);
+		Map<Integer, Long> codeCounts = countsPerCode(actions);
+
+		sessions = createSessions(actions);
+		printWekaFile(sessions);
 	}
 
 	/**
@@ -86,7 +82,7 @@ public class Data2Weka {
 			error("  Error while reading data file: "+file.getAbsolutePath());
 			e.printStackTrace(System.err);
 		}
-		progress("  Actions result: "+result.toString());
+		//progress("  Actions result: "+result.toString());
 		return result;
 	}
 
@@ -103,7 +99,7 @@ public class Data2Weka {
 			SortedSet<Session> sessions = new TreeSet<>();
 			SortedSet<Action> sessionActions = new TreeSet<>();
 			for(Action action : actions.get(id)) {
-				if(action.date.getTimeInMillis() < lastTime) {
+				if(action.date.getTimeInMillis() < lastTime) { // Sanity check
 					error("  Sorting incorrect");
 				}
 				if(action.date.getTimeInMillis()-lastTime <= 1800000L) { // Half hour
@@ -115,6 +111,7 @@ public class Data2Weka {
 						sessions.add(new Session(id, sessionActions));
 					}
 					sessionActions = new TreeSet<>();
+					sessionActions.add(action);
 				}
 				lastTime = action.date.getTimeInMillis();
 			}
@@ -124,8 +121,115 @@ public class Data2Weka {
 			}
 			result.put(id, sessions);
 		}
-		progress("  Sessions result: " + result.toString());
+		//progress("  Sessions result: " + result.toString());
 		return result;
+	}
+
+	public Map<Integer, Long> countsPerCode(Map<String, SortedSet<Action>> actions) {
+		progress("Printing code counts");
+		// Count
+		Map<Integer, Long> codeCounts = new TreeMap<>();
+		for(SortedSet<Action> personActions : actions.values()) {
+			for(Action action : personActions) {
+				Long value = codeCounts.get(action.code);
+				if(value == null) {
+					value = 0L;
+				}
+				value++;
+				codeCounts.put(action.code, value);
+			}
+		}
+		return codeCounts;
+	}
+
+	/**
+	 * Print the features and classes to a Weka file format
+	 * @param data The data to print
+	 */
+	public void printWekaFile(Map<String, SortedSet<Session>> data) {
+		List<? extends Feature> features = Arrays.asList(
+				new CodeFrequencyFirstSessionFeature(52),
+				new CodeFrequencyFirstSessionFeature(54),
+				new CodeFrequencyFirstSessionFeature(55),
+				new CodeFrequencyFirstSessionFeature(56),
+				new CodeFrequencyFirstSessionFeature(58),
+				new CodeFrequencyFirstSessionFeature(71),
+				new CodeFrequencyFirstSessionFeature(91)
+		);
+
+		File fileTarget = new File(TARGET);
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(fileTarget))) {
+			// Write headers
+			writer.write("@RELATION diabetis\n\n");
+			writer.write("@ATTRIBUTE id STRING\n");
+			for(Feature feature : features) {
+				writer.write("@ATTRIBUTE "+feature.getWekaHeader()+"\n");
+			}
+			writer.write("@ATTRIBUTE class {Adherend,NotAdherend}\n\n");
+			// Write data
+			writer.write("@DATA\n");
+			for(String id : data.keySet()) {
+				writer.write(id+",");
+				for(Feature feature : features) {
+					writer.write(feature.calculate(data.get(id))+",");
+				}
+				if(isAdherendFourPerYear(data.get(id))) {
+					writer.write("Adherend\n");
+				} else {
+					writer.write("NotAdherend\n");
+				}
+			}
+		} catch (IOException e) {
+			error("  Error while writing to file: "+fileTarget.getAbsolutePath());
+			e.printStackTrace(System.err);
+		}
+	}
+
+	/**
+	 * Check if a user is adherend by checking if he logged in four times in a year
+	 * @param data The Session data
+	 * @return true for adherend, otherwise false
+	 */
+	private boolean isAdherendFourPerYear(SortedSet<Session> data) {
+		if(data.size() == 1) {
+			return false;
+		}
+		Calendar endTime = getDate("21-11-2015 00:00");
+		long diff = endTime.getTimeInMillis()-data.first().actions.first().date.getTimeInMillis();
+		long quarterYear = 7884000000L;
+		int shouldLogin = (int)Math.ceil(diff/(double)quarterYear);
+		return data.size() >= shouldLogin;
+	}
+
+	/**
+	 * Abstract feature
+	 * @param <Type> resulting type
+	 */
+	private abstract class Feature<Type> {
+		public abstract Type calculate(SortedSet<Session> sessions);
+		public abstract String getWekaHeader();
+	}
+
+	private class CodeFrequencyFirstSessionFeature extends Feature<Integer> {
+		public int code;
+
+		public CodeFrequencyFirstSessionFeature(int code) {
+			this.code = code;
+		}
+
+		public Integer calculate(SortedSet<Session> session) {
+			Integer result = 0;
+			for(Action action : session.first().actions) {
+				if(action.code == code) {
+					result++;
+				}
+			}
+			return result;
+		}
+
+		public String getWekaHeader() {
+			return "code"+code+" NUMERIC";
+		}
 	}
 
 
@@ -198,6 +302,21 @@ public class Data2Weka {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
 		return calendar;
+	}
+
+	/**
+	 * Get the Calendar object for a given date/time input
+	 * @param input The date/time input
+	 * @return The Calendar
+	 */
+	public Calendar getDate(String input) {
+		try {
+			Date date = format.parse(input);
+			Calendar result = Calendar.getInstance();
+			result.setTime(date);
+			return result;
+		} catch (ParseException ignore) {}
+		return null;
 	}
 
 	/**
