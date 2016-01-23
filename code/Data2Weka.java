@@ -147,15 +147,18 @@ public class Data2Weka {
 	 * @param data The data to print
 	 */
 	public void printWekaFile(Map<String, SortedSet<Session>> data) {
-		List<? extends Feature> features = Arrays.asList(
-				new CodeFrequencyFirstSessionFeature(52),
-				new CodeFrequencyFirstSessionFeature(54),
-				new CodeFrequencyFirstSessionFeature(55),
-				new CodeFrequencyFirstSessionFeature(56),
-				new CodeFrequencyFirstSessionFeature(58),
-				new CodeFrequencyFirstSessionFeature(71),
-				new CodeFrequencyFirstSessionFeature(91)
-		);
+		List<Feature> features = new ArrayList<>();
+		// All code features
+		List<Integer> codes = Arrays.asList(10, 21, 22, 30, 31, 33, 34, 35, 40, 50, 51, 52, 53, 56, 70, 71, 90, 91);
+		for(Integer code : codes) {
+			features.add(new CodeFrequencyFirstSessionFeature(code));
+		}
+		// ActionCount feature
+		features.add(new ActionsFirstSessionFeature());
+		// Days between first and second login
+		features.add(new FirstSecondLoginTimeFeature());
+		// Days between second and third login
+		features.add(new SecondThirdLoginTimeFeature());
 
 		File fileTarget = new File(TARGET);
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(fileTarget))) {
@@ -165,7 +168,7 @@ public class Data2Weka {
 			for(Feature feature : features) {
 				writer.write("@ATTRIBUTE "+feature.getWekaHeader()+"\n");
 			}
-			writer.write("@ATTRIBUTE class {Adherend,NotAdherend}\n\n");
+			writer.write("@ATTRIBUTE class {AdherendMeasureCount,AdherendLogins,AdherendCodes,NotAdherend}\n\n");
 			// Write data
 			writer.write("@DATA\n");
 			for(String id : data.keySet()) {
@@ -173,11 +176,7 @@ public class Data2Weka {
 				for(Feature feature : features) {
 					writer.write(feature.calculate(data.get(id))+",");
 				}
-				if(isAdherendFourPerYear(data.get(id))) {
-					writer.write("Adherend\n");
-				} else {
-					writer.write("NotAdherend\n");
-				}
+				writer.write(getAdherend(data.get(id))+"\n");
 			}
 		} catch (IOException e) {
 			error("  Error while writing to file: "+fileTarget.getAbsolutePath());
@@ -190,15 +189,37 @@ public class Data2Weka {
 	 * @param data The Session data
 	 * @return true for adherend, otherwise false
 	 */
-	private boolean isAdherendFourPerYear(SortedSet<Session> data) {
-		if(data.size() == 1) {
-			return false;
-		}
+	private String getAdherend(SortedSet<Session> data) {
+		// Try logged in more as 4 times a year
 		Calendar endTime = getDate("21-11-2015 00:00");
 		long diff = endTime.getTimeInMillis()-data.first().actions.first().date.getTimeInMillis();
 		long quarterYear = 7884000000L;
 		int shouldLogin = (int)Math.ceil(diff/(double)quarterYear);
-		return data.size() >= shouldLogin;
+		if(data.size() >= shouldLogin) {
+			return "AdherendLogins";
+		}
+		// Try codes
+		for(Session session : data) {
+			for(Action action : session.actions) {
+				if(action.code == 52 || action.code == 91) { // personal goal, education module
+					return "AdherendCodes";
+				}
+			}
+		}
+		// Measurements on 4 different days
+		int count = 0;
+		for(Session session : data) {
+			for(Action action : session.actions) {
+				if(action.code == 35) {
+					count++;
+					break; // Go to next session
+				}
+			}
+		}
+		if(count >= 4) {
+			return "AdherendMeasureCount";
+		}
+		return "NotAdherend";
 	}
 
 	/**
@@ -210,6 +231,9 @@ public class Data2Weka {
 		public abstract String getWekaHeader();
 	}
 
+	/**
+	 * Number of actions of a certain type in the first session
+	 */
 	private class CodeFrequencyFirstSessionFeature extends Feature<Integer> {
 		public int code;
 
@@ -217,9 +241,9 @@ public class Data2Weka {
 			this.code = code;
 		}
 
-		public Integer calculate(SortedSet<Session> session) {
+		public Integer calculate(SortedSet<Session> sessions) {
 			Integer result = 0;
-			for(Action action : session.first().actions) {
+			for(Action action : sessions.first().actions) {
 				if(action.code == code) {
 					result++;
 				}
@@ -229,6 +253,64 @@ public class Data2Weka {
 
 		public String getWekaHeader() {
 			return "code"+code+" NUMERIC";
+		}
+	}
+
+	/**
+	 * Number of actions in the first session
+	 */
+	private class ActionsFirstSessionFeature extends Feature<Integer> {
+		public Integer calculate(SortedSet<Session> sessions) {
+			return sessions.first().actions.size();
+		}
+
+		public String getWekaHeader() {
+			return "actionCount NUMERIC";
+		}
+	}
+
+	/**
+	 * Time between first and second login in days
+	 */
+	private class FirstSecondLoginTimeFeature extends Feature<Integer> {
+		public Integer calculate(SortedSet<Session> sessions) {
+			Calendar first = null;
+			for(Session session : sessions) {
+				if(first == null) {
+					first = session.actions.last().date;
+				} else {
+					return (int)((session.actions.first().date.getTimeInMillis() - first.getTimeInMillis()) / 86400000L);
+				}
+			}
+			return -1;
+		}
+
+		public String getWekaHeader() {
+			return "loginTimeFirstSecond NUMERIC";
+		}
+	}
+
+	/**
+	 * Time between first and second login in days
+	 */
+	private class SecondThirdLoginTimeFeature extends Feature<Integer> {
+		public Integer calculate(SortedSet<Session> sessions) {
+			Calendar first = null;
+			boolean skip = true;
+			for (Session session : sessions) {
+				if(skip) {
+					skip = false;
+				} else if (first == null) {
+					first = session.actions.last().date;
+				} else {
+					return (int) ((session.actions.first().date.getTimeInMillis() - first.getTimeInMillis()) / 86400000L);
+				}
+			}
+			return -1;
+		}
+
+		public String getWekaHeader() {
+			return "loginTimeSecondThird NUMERIC";
 		}
 	}
 
