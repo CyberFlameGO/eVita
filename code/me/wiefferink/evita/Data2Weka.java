@@ -1,5 +1,11 @@
 package me.wiefferink.evita;
 
+import me.wiefferink.evita.classes.*;
+import me.wiefferink.evita.features.ActionsFirstSessionFeature;
+import me.wiefferink.evita.features.CodeFrequencyFirstSessionFeature;
+import me.wiefferink.evita.features.FirstSecondLoginTimeFeature;
+import me.wiefferink.evita.features.SecondThirdLoginTimeFeature;
+
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,10 +16,10 @@ public class Data2Weka {
 	public static final String SOURCE = "C:\\Coding\\DataScience\\eVita\\data\\Logdata DM tot 20-NOV-15 - Data Science.txt";
 	public static final String TARGET = "C:\\Coding\\DataScience\\eVita\\data\\data.arff";
 
+	public static SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+
 	private Map<String, SortedSet<Action>> actions;
 	private Map<String, SortedSet<Session>> sessions;
-
-	private SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
 	public Data2Weka() {
 		actions = loadData(SOURCE);
@@ -147,6 +153,7 @@ public class Data2Weka {
 	 * @param data The data to print
 	 */
 	public void printWekaFile(Map<String, SortedSet<Session>> data) {
+		// Setup features
 		List<Feature> features = new ArrayList<>();
 		// All code features
 		List<Integer> codes = Arrays.asList(10, 21, 22, 30, 31, 33, 34, 35, 40, 50, 51, 52, 53, 56, 70, 71, 90, 91);
@@ -160,214 +167,43 @@ public class Data2Weka {
 		// Days between second and third login
 		features.add(new SecondThirdLoginTimeFeature());
 
+		// Setup classes
+		List<Class> classes = new ArrayList<>();
+		// Add classes
+		classes.add(new LoggedInFourTimesAYearClass());
+		classes.add(new EducationModuleClass());
+		classes.add(new PersonalGoalClass());
+		classes.add(new MeasurementsClass());
+		classes.add(new CombinedClass());
+
 		File fileTarget = new File(TARGET);
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(fileTarget))) {
 			// Write headers
-			writer.write("@RELATION diabetis\n\n");
-			writer.write("@ATTRIBUTE id STRING\n");
+			writer.write("@RELATION diabetis\n\n% FEATURES\n");
 			for(Feature feature : features) {
 				writer.write("@ATTRIBUTE "+feature.getWekaHeader()+"\n");
 			}
-			writer.write("@ATTRIBUTE class {AdherendMeasureCount,AdherendLogins,AdherendCodes,NotAdherend}\n\n");
+			writer.write("\n% CLASSES\n");
+			for (Class c : classes) {
+				writer.write("@ATTRIBUTE " + c.getWekaHeader() + "\n");
+			}
+			writer.write("\n");
+
 			// Write data
 			writer.write("@DATA\n");
 			for(String id : data.keySet()) {
-				writer.write(id+",");
-				for(Feature feature : features) {
-					writer.write(feature.calculate(data.get(id))+",");
+				writer.write(features.get(0).calculate(data.get(id)) + "");
+				for(int i=1; i<features.size(); i++) {
+					writer.write("," + features.get(i).calculate(data.get(id)));
 				}
-				writer.write(getAdherend(data.get(id))+"\n");
+				for (Class c : classes) {
+					writer.write("," + c.determine(data.get(id)));
+				}
+				writer.write("\n");
 			}
 		} catch (IOException e) {
 			error("  Error while writing to file: "+fileTarget.getAbsolutePath());
 			e.printStackTrace(System.err);
-		}
-	}
-
-	/**
-	 * Check if a user is adherend by checking if he logged in four times in a year
-	 * @param data The Session data
-	 * @return true for adherend, otherwise false
-	 */
-	private String getAdherend(SortedSet<Session> data) {
-		// Try logged in more as 4 times a year
-		Calendar endTime = getDate("21-11-2015 00:00");
-		long diff = endTime.getTimeInMillis()-data.first().actions.first().date.getTimeInMillis();
-		long quarterYear = 7884000000L;
-		int shouldLogin = (int)Math.ceil(diff/(double)quarterYear);
-		if(data.size() >= shouldLogin) {
-			return "AdherendLogins";
-		}
-		// Try codes
-		for(Session session : data) {
-			for(Action action : session.actions) {
-				if(action.code == 52 || action.code == 91) { // personal goal, education module
-					return "AdherendCodes";
-				}
-			}
-		}
-		// Measurements on 4 different days
-		int count = 0;
-		for(Session session : data) {
-			for(Action action : session.actions) {
-				if(action.code == 35) {
-					count++;
-					break; // Go to next session
-				}
-			}
-		}
-		if(count >= 4) {
-			return "AdherendMeasureCount";
-		}
-		return "NotAdherend";
-	}
-
-	/**
-	 * Abstract feature
-	 * @param <Type> resulting type
-	 */
-	private abstract class Feature<Type> {
-		public abstract Type calculate(SortedSet<Session> sessions);
-		public abstract String getWekaHeader();
-	}
-
-	/**
-	 * Number of actions of a certain type in the first session
-	 */
-	private class CodeFrequencyFirstSessionFeature extends Feature<Integer> {
-		public int code;
-
-		public CodeFrequencyFirstSessionFeature(int code) {
-			this.code = code;
-		}
-
-		public Integer calculate(SortedSet<Session> sessions) {
-			Integer result = 0;
-			for(Action action : sessions.first().actions) {
-				if(action.code == code) {
-					result++;
-				}
-			}
-			return result;
-		}
-
-		public String getWekaHeader() {
-			return "code"+code+" NUMERIC";
-		}
-	}
-
-	/**
-	 * Number of actions in the first session
-	 */
-	private class ActionsFirstSessionFeature extends Feature<Integer> {
-		public Integer calculate(SortedSet<Session> sessions) {
-			return sessions.first().actions.size();
-		}
-
-		public String getWekaHeader() {
-			return "actionCount NUMERIC";
-		}
-	}
-
-	/**
-	 * Time between first and second login in days
-	 */
-	private class FirstSecondLoginTimeFeature extends Feature<Integer> {
-		public Integer calculate(SortedSet<Session> sessions) {
-			Calendar first = null;
-			for(Session session : sessions) {
-				if(first == null) {
-					first = session.actions.last().date;
-				} else {
-					return (int)((session.actions.first().date.getTimeInMillis() - first.getTimeInMillis()) / 86400000L);
-				}
-			}
-			return -1;
-		}
-
-		public String getWekaHeader() {
-			return "loginTimeFirstSecond NUMERIC";
-		}
-	}
-
-	/**
-	 * Time between first and second login in days
-	 */
-	private class SecondThirdLoginTimeFeature extends Feature<Integer> {
-		public Integer calculate(SortedSet<Session> sessions) {
-			Calendar first = null;
-			boolean skip = true;
-			for (Session session : sessions) {
-				if(skip) {
-					skip = false;
-				} else if (first == null) {
-					first = session.actions.last().date;
-				} else {
-					return (int) ((session.actions.first().date.getTimeInMillis() - first.getTimeInMillis()) / 86400000L);
-				}
-			}
-			return -1;
-		}
-
-		public String getWekaHeader() {
-			return "loginTimeSecondThird NUMERIC";
-		}
-	}
-
-
-	/**
-	 * Represents a row of the data log file
-	 */
-	private class Action implements Comparable<Action> {
-		public String id;
-		public Calendar date;
-		public int code;
-		public String information;
-
-		public Action(String id, Calendar date, int code, String information) {
-			this.id = id;
-			this.date = date;
-			this.code = code;
-			this.information = information;
-		}
-		public Action(String id, Date date, int code, String information) {
-			this(id, dateToCalendar(date), code, information);
-		}
-
-		@Override
-		public String toString() {
-			return "("+id+", "+format.format(date.getTime())+", "+code+", "+information+")";
-		}
-
-		/**
-		 * Sort by date
-		 */
-		@Override
-		public int compareTo(Action action) {
-			return ((Long)date.getTimeInMillis()).compareTo(action.date.getTimeInMillis());
-		}
-	}
-
-	private class Session implements Comparable<Session> {
-		public String id;
-		public SortedSet<Action> actions;
-
-		public Session(String id, SortedSet<Action> actions) {
-			this.id = id;
-			this.actions = actions;
-		}
-
-		@Override
-		public String toString() {
-			return "(" + id + ", "+actions.toString()+")";
-		}
-
-		/**
-		 * Sort by starting date
-		 */
-		@Override
-		public int compareTo(Session session) {
-			return ((Long) actions.first().date.getTimeInMillis()).compareTo(session.actions.first().date.getTimeInMillis());
 		}
 	}
 
@@ -380,7 +216,7 @@ public class Data2Weka {
 	 * @param date The date to wrap
 	 * @return The Calendar
 	 */
-	public Calendar dateToCalendar(Date date) {
+	public static Calendar dateToCalendar(Date date) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
 		return calendar;
@@ -391,7 +227,7 @@ public class Data2Weka {
 	 * @param input The date/time input
 	 * @return The Calendar
 	 */
-	public Calendar getDate(String input) {
+	public static Calendar getDate(String input) {
 		try {
 			Date date = format.parse(input);
 			Calendar result = Calendar.getInstance();
