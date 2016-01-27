@@ -1,6 +1,6 @@
 \section{Materials and Methods} \label{section:materialsAndMethods}
 In this section the transformation of the logging data received from e-Vita to the \code{.arff} format of Weka is described. Next to this determining the features and defining adherence is described.
-\subsection{Given data}
+\subsection{Given data} \label{subsection:givenData}
 The provided data is an Excel file with four columns and 9415 rows. The columns contain the \emph{ResearchNumber}, \emph{DateTimeTag}, \code{Code} and \code{ExtraInformation}. Each row represents one action taken by the user on the e-Vita website. The research number is a unique identifier per user, with which we are able to group the data per user. The code column denotes which action the user has taken, as described in Table~\ref{table:codes}. The extra information field has information about the section that the user has visited, the type of measurement that is taken, or an actual measurement value.
 
 \begin{table}[]
@@ -73,12 +73,26 @@ Adherence in the context of the e-Vita website means that the user interacts wit
 	\item The user added measurements (code 35) on four different days.
 \end{itemize}
 
-Since the provided data is only for a single year, the requirement of logging in at least four times a year is weakened interpreted as follows: The number of sessions of a user needs to be at least once each 3 months between his first and last login. This means that a user that logged in twice in the period of two months, meets the requirement. But a user that logged in twice in seven months, does not meet the requirement.
+Since the provided data is only for a single year, the requirement of logging in at least four times a year is weakened interpreted as follows: The number of sessions of a user needs to be at least once each 3 months between his first and last login. This means that a user that logged in twice in the period of two months, meets the requirement. But a user that logged in twice in seven months, does not meet the requirement. 
 
-\subsection{Features}
-To give input to the classifiers of the Weka tool we need to define features and determine the values for them per user. Because we want to predict the adherence based on the first session of the user the features will only use the data of the first session as input.
+\subsection{Features} \label{subsection:features}
+To give input to the classifiers of the Weka tool we need to define features and determine the values for them per user. Because we want to predict the adherence based on the first session of the user the features will only use the data of the first session as input. Following there is a description of the implemented feature attributes.
+
+\subsubsection{Code frequency feature}
+The first feature count the number of times a certain code occurs during the first session. For example if you give it the code \code{35} in the constructor, then it will count the number of times the user has added a new measurement (listed in Table \ref{table:codes}) in the first session of using e-Vita. This feature has been generated for all codes listed in Table \ref{table:codes}. Since using certain features might predict that the user will be adherent, these feature are valuable.
+
+\subsubsection{Actions in the first session}
+This feature counts the number of actions the user has performed in his first session. The number of actions in the first session could say something about how interested the user is, and might therefore predict the adherence.
+
+\subsubsection{Session length}
+The session length feature counts how many minutes the user used e-Vita in his first session. For this the same applies as for the actions feature, it might indicate that the user is more interested in the application if he spends more time.
+
+\subsubsection{Days between sessions}
+Two more features have been added, the number of days between the first and second session, and the number of days between the second and third session. These features do not purely use data from the first session, but will independently be used to predict the adherence of a user instead of the other features.
+
 
 \subsection{Creating a Weka file}
+As input the Weka tool requires an \code{.arff} file. This is a simply file format where you first define the columns and then provide the data. Using the structured data from Section \ref{subsection:givenData} and the features from Section~\ref{subsection:features} this file for Weka has been generated.
 
 \subsection{Using Weka}
 
