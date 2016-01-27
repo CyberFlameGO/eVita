@@ -1,0 +1,84 @@
+\section{Materials and Methods} \label{section:materialsAndMethods}
+In this section the transformation of the logging data received from e-Vita to the \code{.arff} format of Weka is described. Next to this determining the features and defining adherence is described.
+\subsection{Given data}
+The provided data is an Excel file with four columns and 9415 rows. The columns contain the \emph{ResearchNumber}, \emph{DateTimeTag}, \code{Code} and \code{ExtraInformation}. Each row represents one action taken by the user on the e-Vita website. The research number is a unique identifier per user, with which we are able to group the data per user. The code column denotes which action the user has taken, as described in Table~\ref{table:codes}. The extra information field has information about the section that the user has visited, the type of measurement that is taken, or an actual measurement value.
+
+\begin{table}[]
+	\centering
+	\caption{Used codes in the data, and their count}
+	\label{table:codes}
+	\begin{tabular}{@{}lll@{}}
+		\toprule
+		\textbf{Code} & \textbf{Description}                                                                              & \textbf{Count} \\ \midrule
+		10            & Homepage                                                                                          & 3314           \\
+		21            & Opening lab values                                                                                & 391            \\
+		22            & Clicking explanation of certain lab value                                                         & 1702           \\
+		30            & Opening monitoring                                                                                & 184            \\
+		31            & Opening graph of certain measurement                                                              & 231            \\
+		33            & Opening graph previous measurements                                                               & 79             \\
+		34            & Opening target values                                                                             & 69             \\
+		35            & Adding new measurement                                                                            & 162            \\
+		40            & Clicking button for extra information                                                             & 477            \\
+		50            & Opening coaching                                                                                  & 448            \\
+		51            & Clicking button “New wish”                                                                        & 53             \\
+		52            & Adding new wish                                                                                   & 26             \\
+		53            & Clicking button “Choose goals”                                                                    & 50             \\
+		54            & Adding new goal                                                                                   & 35             \\
+		55            & Change goal status                                                                                & 5              \\
+		56            & Adding new action                                                                                 & 22             \\
+		57            & Click button “Evaluate action”                                                                    & 12             \\
+		58            & Adding new evaluation                                                                             & 9              \\
+		59            & Click button “Ask for coaching”                                                                   & 12             \\
+		60            & \begin{tabular}[c]{@{}l@{}}Click button “Yes, the response of the \\ coach is clear”\end{tabular} & 8              \\
+		70            & Opening function for extra information                                                            & 401            \\
+		71            & Actual opening the extra information                                                              & 235            \\
+		90            & Opening function for education                                                                    & 630            \\
+		91            & Actual opening education modules                                                                  & 859            \\ \bottomrule
+	\end{tabular}
+\end{table}
+
+To process the given data it first has been saved as a tab separated file from Excel. Then a Java program reads this file and executes a couple of steps to get the data structured in a way that is easy to process. The list below shows the steps.
+
+\begin{enumerate}
+	\item Read the tab separated file.
+	\item Go through the tab separated file line by line, create an Action object for each line. An Action contains the user id, date, code and extra information fields. The Action object is added to a map that maps user ids to a set with their actions, in Java this is represented by the following structure:\\ \code{Map< String, SortedSet<Action> >}. The Action object of a user are sorted by date to make the next step easier.
+	\item Group the list of actions for a user into Session objects. A Session object holds the user id and a SortedSet of Actions. This involves going through the Actions of a user, and adding them to a Session while the time between them is 30 minutes or less. If there is more time in between then it starts a new session. This will output the following data structure:\\ \code{Map< String, SortedSet<Session> >}. The Session objects are sorted by date, so that the first Session of a user is at the start.
+\end{enumerate}
+
+The described process will deliver an in-memory representation of the data, this helps to detect adherence and determine features later. A couple of statistics about the data after the processing of this step can be found in Table~\ref{table:dataStats}. The exact code used for processing the files can be found on GitHub\footnote{https://github.com/NLthijs48/eVita}.
+
+\begin{table}[]
+	\centering
+	\caption{Basic statistics of the provided data}
+	\label{table:dataStats}
+	\begin{tabular}{@{}ll@{}}
+		\toprule
+		Users                       & 301   \\
+		Actions                     & 9414  \\
+		Actions per user (average)  & 31.28 \\
+		Sessions                    & 1187  \\
+		Sessions per user (average) & 3.94  \\ \bottomrule
+	\end{tabular}
+\end{table}
+
+Since the adherence and features will use the code field quite a lot, some exploration has been done for this column. In Table~\ref{table:codes} the number of times a code is used in an action is listed.
+
+\subsection{Adherence definition}
+Adherence in the context of the e-Vita website means that the user interacts with the website in a way that we think the user is actually using the website for something, instead of just trying it once. This is a property of the user that we are trying to predict based on the behaviour of the user in the first session. For this process we first need to determine which users are actually adhered and which are not. The definition of adherence is given below, if any of the given conditions is true, then we consider the user to be adherent.
+
+\begin{itemize}
+	\item The user visits the the application four times or more a year.
+	\item The user added at least one personal, health-related goal (code 52).
+	\item The user has followed at least one education module (code 91).
+	\item The user added measurements (code 35) on four different days.
+\end{itemize}
+
+Since the provided data is only for a single year, the requirement of logging in at least four times a year is weakened interpreted as follows: The number of sessions of a user needs to be at least once each 3 months between his first and last login. This means that a user that logged in twice in the period of two months, meets the requirement. But a user that logged in twice in seven months, does not meet the requirement.
+
+\subsection{Features}
+To give input to the classifiers of the Weka tool we need to define features and determine the values for them per user. Because we want to predict the adherence based on the first session of the user the features will only use the data of the first session as input.
+
+\subsection{Creating a Weka file}
+
+\subsection{Using Weka}
+

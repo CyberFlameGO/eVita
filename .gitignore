@@ -1,1 +1,11 @@
 data/*
+
+
+*.gz
+*.log
+*.aux
+*.bbl
+*.blg
+*.out
+*.tmp
+*.pdf
