@@ -25,7 +25,7 @@ public class Action implements Comparable<Action> {
 
 	@Override
 	public String toString() {
-		return "(" + id + ", " + Data2Weka.format.format(date.getTime()) + ", " + code + ", " + information + ")";
+		return "\t(" + id + ", " + Data2Weka.format.format(date.getTime()) + ", " + code + ", " + information + ")\n";
 	}
 
 	/**
@@ -33,6 +33,10 @@ public class Action implements Comparable<Action> {
 	 */
 	@Override
 	public int compareTo(Action action) {
-		return ((Long) date.getTimeInMillis()).compareTo(action.date.getTimeInMillis());
+		int result = ((Long) date.getTimeInMillis()).compareTo(action.date.getTimeInMillis());
+		if(result == 0) { // Otherwise equal date actions are lost
+			result = 1;
+		}
+		return result;
 	}
 }

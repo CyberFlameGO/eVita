@@ -27,6 +27,11 @@ public class MeasurementsClass extends Class {
 
 	@Override
 	public String getWekaHeader() {
-		return "classMeasurements {Adherend,NotAdherend}";
+		return "{Adherend,NotAdherend}";
+	}
+
+	@Override
+	public String getName() {
+		return "classMeasurements";
 	}
 }

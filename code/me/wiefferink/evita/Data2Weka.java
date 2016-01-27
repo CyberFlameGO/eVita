@@ -1,10 +1,7 @@
 package me.wiefferink.evita;
 
 import me.wiefferink.evita.classes.*;
-import me.wiefferink.evita.features.ActionsFirstSessionFeature;
-import me.wiefferink.evita.features.CodeFrequencyFirstSessionFeature;
-import me.wiefferink.evita.features.FirstSecondLoginTimeFeature;
-import me.wiefferink.evita.features.SecondThirdLoginTimeFeature;
+import me.wiefferink.evita.features.*;
 
 import java.io.*;
 import java.text.ParseException;
@@ -14,7 +11,7 @@ import java.util.*;
 public class Data2Weka {
 
 	public static final String SOURCE = "C:\\Coding\\DataScience\\eVita\\data\\Logdata DM tot 20-NOV-15 - Data Science.txt";
-	public static final String TARGET = "C:\\Coding\\DataScience\\eVita\\data\\data.arff";
+	public static final String TARGET = "C:\\Coding\\DataScience\\eVita\\data\\";
 
 	public static SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
@@ -24,8 +21,13 @@ public class Data2Weka {
 	public Data2Weka() {
 		actions = loadData(SOURCE);
 		Map<Integer, Long> codeCounts = countsPerCode(actions);
-
+		/*
+		for(Integer code : codeCounts.keySet()) {
+			progress(code+": "+codeCounts.get(code));
+		}
+		*/
 		sessions = createSessions(actions);
+		printStats(sessions);
 		printWekaFile(sessions);
 	}
 
@@ -36,6 +38,7 @@ public class Data2Weka {
 	 */
 	public Map<String, SortedSet<Action>> loadData(String source) {
 		progress("Loading data: "+source);
+		int actionCount = 0;
 		Map<String, SortedSet<Action>> result = new HashMap<>();
 		File file = new File(source);
 		if(!file.isFile() || !file.exists()) {
@@ -79,6 +82,7 @@ public class Data2Weka {
 								result.put(parts[0], set);
 							}
 							set.add(new Action(parts[0], date, code, information));
+							actionCount++;
 						}
 					}
 				}
@@ -88,7 +92,11 @@ public class Data2Weka {
 			error("  Error while reading data file: "+file.getAbsolutePath());
 			e.printStackTrace(System.err);
 		}
-		//progress("  Actions result: "+result.toString());
+		int realCount = 0;
+		for(SortedSet<Action> actions : result.values()) {
+			realCount += actions.size();
+		}
+		progress("  Actions result: lines="+actionCount+", real="+realCount);
 		return result;
 	}
 
@@ -104,6 +112,7 @@ public class Data2Weka {
 			long lastTime = 0;
 			SortedSet<Session> sessions = new TreeSet<>();
 			SortedSet<Action> sessionActions = new TreeSet<>();
+			int actionsStart = actions.get(id).size();
 			for(Action action : actions.get(id)) {
 				if(action.date.getTimeInMillis() < lastTime) { // Sanity check
 					error("  Sorting incorrect");
@@ -125,6 +134,14 @@ public class Data2Weka {
 			if (sessionActions.size() > 0) {
 				sessions.add(new Session(id, sessionActions));
 			}
+			int actionSessions = 0;
+			for(Session session : sessions) {
+				actionSessions += session.actions.size();
+			}
+			if(actionsStart != actionSessions) {
+				error("  missing actions, start="+actionsStart+", end="+actionSessions);
+			}
+
 			result.put(id, sessions);
 		}
 		//progress("  Sessions result: " + result.toString());
@@ -132,8 +149,7 @@ public class Data2Weka {
 	}
 
 	public Map<Integer, Long> countsPerCode(Map<String, SortedSet<Action>> actions) {
-		progress("Printing code counts");
-		// Count
+		progress("Calculating code counts");
 		Map<Integer, Long> codeCounts = new TreeMap<>();
 		for(SortedSet<Action> personActions : actions.values()) {
 			for(Action action : personActions) {
@@ -148,6 +164,24 @@ public class Data2Weka {
 		return codeCounts;
 	}
 
+	public void printStats(Map<String, SortedSet<Session>> data) {
+		progress("Basic stats:");
+		double users = data.size();
+		progress("  Users: " + users);
+		double actions = 0;
+		double sessions = 0;
+		for(SortedSet<Session> s : data.values()) {
+			sessions += s.size();
+			for(Session session : s) {
+				actions += session.actions.size();
+			}
+		}
+		progress("  Actions: "+actions);
+		progress("  Actions/user: " + (actions/users));
+		progress("  Sessions: " + sessions);
+		progress("  Sessions/user: " + (sessions / users));
+	}
+
 	/**
 	 * Print the features and classes to a Weka file format
 	 * @param data The data to print
@@ -156,7 +190,7 @@ public class Data2Weka {
 		// Setup features
 		List<Feature> features = new ArrayList<>();
 		// All code features
-		List<Integer> codes = Arrays.asList(10, 21, 22, 30, 31, 33, 34, 35, 40, 50, 51, 52, 53, 56, 70, 71, 90, 91);
+		List<Integer> codes = Arrays.asList(10, 21, 22, 30, 31, 33, 34, 35, 40, 50, 51, 52, 53, 54, 56, 57, 58, 59, 60, 70, 71, 90, 91);
 		for(Integer code : codes) {
 			features.add(new CodeFrequencyFirstSessionFeature(code));
 		}
@@ -166,6 +200,10 @@ public class Data2Weka {
 		features.add(new FirstSecondLoginTimeFeature());
 		// Days between second and third login
 		features.add(new SecondThirdLoginTimeFeature());
+		// First session length in minutes
+		features.add(new FirstSessionLengthFeature());
+		// Actions per hour first session
+		features.add(new ActionsPerHourFeature());
 
 		// Setup classes
 		List<Class> classes = new ArrayList<>();
@@ -176,34 +214,31 @@ public class Data2Weka {
 		classes.add(new MeasurementsClass());
 		classes.add(new CombinedClass());
 
-		File fileTarget = new File(TARGET);
-		try(BufferedWriter writer = new BufferedWriter(new FileWriter(fileTarget))) {
-			// Write headers
-			writer.write("@RELATION diabetis\n\n% FEATURES\n");
-			for(Feature feature : features) {
-				writer.write("@ATTRIBUTE "+feature.getWekaHeader()+"\n");
-			}
-			writer.write("\n% CLASSES\n");
-			for (Class c : classes) {
-				writer.write("@ATTRIBUTE " + c.getWekaHeader() + "\n");
-			}
-			writer.write("\n");
 
-			// Write data
-			writer.write("@DATA\n");
-			for(String id : data.keySet()) {
-				writer.write(features.get(0).calculate(data.get(id)) + "");
-				for(int i=1; i<features.size(); i++) {
-					writer.write("," + features.get(i).calculate(data.get(id)));
+		for(Class c : classes) {
+			File fileTarget = new File(TARGET, c.getName()+".arff");
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileTarget))) {
+				// Write headers
+				writer.write("@RELATION diabetis\n\n% FEATURES\n");
+				for (Feature feature : features) {
+					writer.write("@ATTRIBUTE " + feature.getWekaHeader() + "\n");
 				}
-				for (Class c : classes) {
-					writer.write("," + c.determine(data.get(id)));
+				writer.write("\n% CLASS\n");
+				writer.write("@ATTRIBUTE " + c.getName() + " " + c.getWekaHeader() + "\n\n");
+
+				// Write data
+				writer.write("@DATA\n");
+				for (String id : data.keySet()) {
+					writer.write(features.get(0).calculate(data.get(id)) + "");
+					for (int i = 1; i < features.size(); i++) {
+						writer.write("," + features.get(i).calculate(data.get(id)));
+					}
+					writer.write("," + c.determine(data.get(id)) + "\t\t\t% id=" + id + "\n");
 				}
-				writer.write("\n");
+			} catch (IOException e) {
+				error("  Error while writing to file: " + fileTarget.getAbsolutePath());
+				e.printStackTrace(System.err);
 			}
-		} catch (IOException e) {
-			error("  Error while writing to file: "+fileTarget.getAbsolutePath());
-			e.printStackTrace(System.err);
 		}
 	}
 

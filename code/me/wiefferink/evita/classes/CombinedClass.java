@@ -47,6 +47,11 @@ public class CombinedClass extends Class {
 
 	@Override
 	public String getWekaHeader() {
-		return "classCombined {Adherend,NotAdherend}";
+		return "{Adherend,NotAdherend}";
+	}
+
+	@Override
+	public String getName() {
+		return "classCombined";
 	}
 }

@@ -26,6 +26,11 @@ public class LoggedInFourTimesAYearClass extends Class {
 
 	@Override
 	public String getWekaHeader() {
-		return "classLoggedIn {Adherend,NotAdherend}";
+		return "{Adherend,NotAdherend}";
+	}
+
+	@Override
+	public String getName() {
+		return "classLoggedIn";
 	}
 }

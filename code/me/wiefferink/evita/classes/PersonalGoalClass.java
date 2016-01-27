@@ -21,6 +21,11 @@ public class PersonalGoalClass extends Class {
 
 	@Override
 	public String getWekaHeader() {
-		return "classPersonalGoal {Adherend,NotAdherend}";
+		return "{Adherend,NotAdherend}";
+	}
+
+	@Override
+	public String getName() {
+		return "classPersonalGoal";
 	}
 }

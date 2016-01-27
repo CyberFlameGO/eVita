@@ -14,7 +14,7 @@ public class Session implements Comparable<Session> {
 
 	@Override
 	public String toString() {
-		return "(" + id + ", " + actions.toString() + ")";
+		return "(" + id + ", " + actions.toString() + ")\n";
 	}
 
 	/**

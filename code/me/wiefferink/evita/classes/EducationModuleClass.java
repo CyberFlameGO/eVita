@@ -21,6 +21,12 @@ public class EducationModuleClass extends Class {
 
 	@Override
 	public String getWekaHeader() {
-		return "classEducationModule {Adherend,NotAdherend}";
+		return "{Adherend,NotAdherend}";
+	}
+
+
+	@Override
+	public String getName() {
+		return "classEducationModule";
 	}
 }
