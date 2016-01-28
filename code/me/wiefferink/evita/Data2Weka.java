@@ -219,7 +219,7 @@ public class Data2Weka {
 			File fileTarget = new File(TARGET, c.getName()+".arff");
 			try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileTarget))) {
 				// Write headers
-				writer.write("@RELATION diabetis\n\n% FEATURES\n");
+				writer.write("@RELATION diabetes\n\n% FEATURES\n");
 				for (Feature feature : features) {
 					writer.write("@ATTRIBUTE " + feature.getWekaHeader() + "\n");
 				}

@@ -20,14 +20,14 @@ public class MeasurementsClass extends Class {
 			}
 		}
 		if (count >= 4) {
-			return "Adherend";
+			return "Adherent";
 		}
-		return "NotAdherend";
+		return "NotAdherent";
 	}
 
 	@Override
 	public String getWekaHeader() {
-		return "{Adherend,NotAdherend}";
+		return "{Adherent,NotAdherent}";
 	}
 
 	@Override

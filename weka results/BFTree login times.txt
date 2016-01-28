@@ -1,0 +1,49 @@
+=== Run information ===
+
+Scheme:weka.classifiers.trees.BFTree -S 1 -M 2 -N 5 -C 1.0 -P POSTPRUNED
+Relation:     diabetes-weka.filters.unsupervised.attribute.Remove-R1-24,27-28
+Instances:    301
+Attributes:   3
+              loginTimeFirstSecond
+              loginTimeSecondThird
+              classCombined
+Test mode:10-fold cross-validation
+
+=== Classifier model (full training set) ===
+
+Best-First Decision Tree
+
+loginTimeFirstSecond < 201.5: Adherend(133.82/127.27)
+loginTimeFirstSecond >= 201.5: NotAdherend(27.73/12.18)
+
+Size of the Tree: 3
+
+Number of Leaf Nodes: 2
+
+Time taken to build model: 0.02 seconds
+
+=== Stratified cross-validation ===
+=== Summary ===
+
+Correctly Classified Instances         214               71.0963 %
+Incorrectly Classified Instances        87               28.9037 %
+Kappa statistic                          0.4208
+Mean absolute error                      0.4925
+Root mean squared error                  0.5069
+Relative absolute error                 98.576  %
+Root relative squared error            101.4148 %
+Total Number of Instances              301     
+
+=== Detailed Accuracy By Class ===
+
+               TP Rate   FP Rate   Precision   Recall  F-Measure   ROC Area  Class
+                 0.685     0.265      0.709     0.685     0.697      0.678    Adherend
+                 0.735     0.315      0.713     0.735     0.724      0.678    NotAdherend
+Weighted Avg.    0.711     0.291      0.711     0.711     0.711      0.678
+
+=== Confusion Matrix ===
+
+   a   b   <-- classified as
+ 100  46 |   a = Adherend
+  41 114 |   b = NotAdherend
+

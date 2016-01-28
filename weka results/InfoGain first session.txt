@@ -1,0 +1,76 @@
+=== Run information ===
+
+Evaluator:    weka.attributeSelection.InfoGainAttributeEval 
+Search:weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1
+Relation:     diabetes-weka.filters.unsupervised.attribute.Remove-R25-26
+Instances:    301
+Attributes:   27
+              code10
+              code21
+              code22
+              code30
+              code31
+              code33
+              code34
+              code35
+              code40
+              code50
+              code51
+              code52
+              code53
+              code54
+              code56
+              code57
+              code58
+              code59
+              code60
+              code70
+              code71
+              code90
+              code91
+              actionCount
+              sessionLength
+              actionsPerHour
+              classCombined
+Evaluation mode:evaluate on all training data
+
+
+
+=== Attribute Selection on all input data ===
+
+Search Method:
+	Attribute ranking.
+
+Attribute Evaluator (supervised, Class (nominal): 27 classCombined):
+	Information Gain Ranking Filter
+
+Ranked attributes:
+ 0.3535   23 code91
+ 0.102    22 code90
+ 0.0465   24 actionCount
+ 0.0395   25 sessionLength
+ 0.0257    1 code10
+ 0.0176   12 code52
+ 0.0105   13 code53
+ 0        19 code60
+ 0         5 code31
+ 0         7 code34
+ 0         6 code33
+ 0         4 code30
+ 0         9 code40
+ 0         3 code22
+ 0         2 code21
+ 0         8 code35
+ 0        10 code50
+ 0        18 code59
+ 0        15 code56
+ 0        17 code58
+ 0        16 code57
+ 0        14 code54
+ 0        11 code51
+ 0        20 code70
+ 0        21 code71
+ 0        26 actionsPerHour
+
+Selected attributes: 23,22,24,25,1,12,13,19,5,7,6,4,9,3,2,8,10,18,15,17,16,14,11,20,21,26 : 26
+

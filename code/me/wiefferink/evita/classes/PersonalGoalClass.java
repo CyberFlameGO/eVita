@@ -12,16 +12,16 @@ public class PersonalGoalClass extends Class {
 		for (Session session : sessions) {
 			for (Action action : session.actions) {
 				if (action.code == 52) { // personal goal
-					return "Adherend";
+					return "Adherent";
 				}
 			}
 		}
-		return "NotAdherend";
+		return "NotAdherent";
 	}
 
 	@Override
 	public String getWekaHeader() {
-		return "{Adherend,NotAdherend}";
+		return "{Adherent,NotAdherent}";
 	}
 
 	@Override

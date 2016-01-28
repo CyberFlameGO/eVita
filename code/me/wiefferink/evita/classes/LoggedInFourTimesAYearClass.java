@@ -18,15 +18,15 @@ public class LoggedInFourTimesAYearClass extends Class {
 			long quarterYear = 7884000000L;
 			int shouldLogin = (int) Math.ceil(diff / (double) quarterYear);
 			if (sessions.size() >= shouldLogin) {
-				return "Adherend";
+				return "Adherent";
 			}
 		}
-		return "NotAdherend";
+		return "NotAdherent";
 	}
 
 	@Override
 	public String getWekaHeader() {
-		return "{Adherend,NotAdherend}";
+		return "{Adherent,NotAdherent}";
 	}
 
 	@Override

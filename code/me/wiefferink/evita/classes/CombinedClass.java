@@ -18,14 +18,14 @@ public class CombinedClass extends Class {
 			long quarterYear = 7884000000L;
 			int shouldLogin = (int) Math.ceil(diff / (double) quarterYear);
 			if (sessions.size() >= shouldLogin) {
-				return "Adherend";
+				return "Adherent";
 			}
 		}
 		// Try codes
 		for (Session session : sessions) {
 			for (Action action : session.actions) {
 				if (action.code == 52 || action.code == 91) { // personal goal, education module
-					return "Adherend";
+					return "Adherent";
 				}
 			}
 		}
@@ -40,14 +40,14 @@ public class CombinedClass extends Class {
 			}
 		}
 		if (count >= 4) {
-			return "Adherend";
+			return "Adherent";
 		}
-		return "NotAdherend";
+		return "NotAdherent";
 	}
 
 	@Override
 	public String getWekaHeader() {
-		return "{Adherend,NotAdherend}";
+		return "{Adherent,NotAdherent}";
 	}
 
 	@Override

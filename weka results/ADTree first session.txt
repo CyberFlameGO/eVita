@@ -1,0 +1,89 @@
+=== Run information ===
+
+Scheme:weka.classifiers.trees.ADTree -B 10 -E -3
+Relation:     diabetes-weka.filters.unsupervised.attribute.Remove-R25-26
+Instances:    301
+Attributes:   27
+              code10
+              code21
+              code22
+              code30
+              code31
+              code33
+              code34
+              code35
+              code40
+              code50
+              code51
+              code52
+              code53
+              code54
+              code56
+              code57
+              code58
+              code59
+              code60
+              code70
+              code71
+              code90
+              code91
+              actionCount
+              sessionLength
+              actionsPerHour
+              classCombined
+Test mode:10-fold cross-validation
+
+=== Classifier model (full training set) ===
+
+Alternating decision tree:
+
+: 0.03
+|  (1)code91 < 0.5: 0.399
+|  |  (2)actionsPerHour < 177.5: -0.088
+|  |  |  (3)code51 < 0.5: 0.035
+|  |  |  |  (8)actionsPerHour < 35.5: -0.475
+|  |  |  |  (8)actionsPerHour >= 35.5: 0.061
+|  |  |  |  |  (9)code10 < 4.5: -0.056
+|  |  |  |  |  (9)code10 >= 4.5: 0.789
+|  |  |  (3)code51 >= 0.5: -1.042
+|  |  |  (6)actionCount < 14.5: 0.044
+|  |  |  (6)actionCount >= 14.5: -0.438
+|  |  |  |  (7)actionsPerHour < 54.5: 0.397
+|  |  |  |  (7)actionsPerHour >= 54.5: -0.652
+|  |  (2)actionsPerHour >= 177.5: 0.593
+|  |  |  (4)sessionLength < 0.5: -0.669
+|  |  |  (4)sessionLength >= 0.5: 0.324
+|  |  |  |  (5)code30 < 0.5: 1.042
+|  |  |  |  (5)code30 >= 0.5: -0.663
+|  (1)code91 >= 0.5: -3.364
+Legend: -ve = Adherend, +ve = NotAdherend
+Tree size (total number of nodes): 28
+Leaves (number of predictor nodes): 19
+
+Time taken to build model: 0.01 seconds
+
+=== Stratified cross-validation ===
+=== Summary ===
+
+Correctly Classified Instances         224               74.4186 %
+Incorrectly Classified Instances        77               25.5814 %
+Kappa statistic                          0.4839
+Mean absolute error                      0.3279
+Root mean squared error                  0.4018
+Relative absolute error                 65.6411 %
+Root relative squared error             80.3819 %
+Total Number of Instances              301     
+
+=== Detailed Accuracy By Class ===
+
+               TP Rate   FP Rate   Precision   Recall  F-Measure   ROC Area  Class
+                 0.603     0.123      0.822     0.603     0.696      0.789    Adherend
+                 0.877     0.397      0.701     0.877     0.779      0.789    NotAdherend
+Weighted Avg.    0.744     0.264      0.76      0.744     0.739      0.789
+
+=== Confusion Matrix ===
+
+   a   b   <-- classified as
+  88  58 |   a = Adherend
+  19 136 |   b = NotAdherend
+
