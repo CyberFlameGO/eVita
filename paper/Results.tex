@@ -1,2 +1,60 @@
 \section{Results}
-Results
+For the final results the actions described in Section \ref{subsection:usingWeka} have been executed.
+
+\subsection{Predictors of adherence: First session}
+The ranking of the attributes gave the ranking as seen in Table \ref{table:adherenceFirstAttributes}. As already expected the code 91 is a valuable attribute, this attribute is also used for the actual adherence value. Code 90 has to be used before you can use code 91 because of the layout of the website, so it is good to see that this code is just below. Then the action count and session length are the best attributes, which are also expected to have influence. The attributes that are not mentioned in the table have a score of 0, which means they give (almost) no information.
+
+\begin{table}[]
+	\centering
+	\caption{First session adherence \\attributes ranking}
+	\label{table:adherenceFirstAttributes}
+	\begin{tabular}{@{}ll@{}}
+		\toprule
+		\textbf{Score} & \textbf{Attribute} \\ \midrule
+		0.3535         & code91             \\
+		0.102          & code90             \\
+		0.0465         & actionCount        \\
+		0.0395         & sessionLength      \\
+		0.257          & code10             \\
+		0.0176         & code52             \\
+		0.0105         & code53             \\ \bottomrule
+	\end{tabular}
+\end{table}
+
+Next the \code{ADTree} classifier has been ran, the decision tree can be found in Listing \ref{listing:adherenceFirstTree} and the confusion matrix can be found in Table \ref{table:adherenceFirstMatrix}. Once again code 91 is important, but now also the actions per hour is used often in the tree. This is probably because the actions per hour combines the action count and session length attributes, so therefore it might be more valuable than deciding on only one of them. 
+
+The confusion matrix shows that 88 instances have been correctly classified as adherent and 136 instances have been correctly classified as not adherent. 58 instances have been classified as not adherent, but should be adherent (19.27\%), and 19 instances have been classified as adherent while they should not be (6.31\%). This brings the performance of the classification to 74.42\%.
+
+\begin{lstlisting}[caption={Adherence first session, \\ ADTree decision tree}, label=listing:adherenceFirstTree, float=htpb, language=xml]
+: 0.03
+|	(1)code91 < 0.5: 0.399
+|	|	(2)actionsPerHour < 177.5: -0.088
+|	|	|	(3)code51 < 0.5: 0.035
+|	|	|	|	(8)actionsPerHour < 35.5: -0.475
+|	|	|	|	(8)actionsPerHour >= 35.5: 0.061
+|	|	|	|	|	(9)code10 < 4.5: -0.056
+|	|	|	|	|	(9)code10 >= 4.5: 0.789
+|	|	|	(3)code51 >= 0.5: -1.042
+|	|	|	(6)actionCount < 14.5: 0.044
+|	|	|	(6)actionCount >= 14.5: -0.438
+|	|	|	|	(7)actionsPerHour < 54.5: 0.397
+|	|	|	|	(7)actionsPerHour >= 54.5: -0.652
+|	|	(2)actionsPerHour >= 177.5: 0.593
+|	|	|	(4)sessionLength < 0.5: -0.669
+|	|	|	(4)sessionLength >= 0.5: 0.324
+|	|	|	|	(5)code30 < 0.5: 1.042
+|	|	|	|	(5)code30 >= 0.5: -0.663
+|	(1)code91 >= 0.5: -3.364
+\end{lstlisting}
+
+\begin{table}[]
+	\centering
+	\caption{Adherence first session, \\confusion matrix}
+	\label{table:adherenceFirstMatrix}
+	\begin{tabular}{@{}ll|l@{}}
+		\toprule
+		\textbf{A} & \textbf{B} & \textless-- classified as \\ \midrule
+		88         & 58         & a = Adherent              \\
+		19         & 136        & b = NotAdherent          
+	\end{tabular}
+\end{table}
