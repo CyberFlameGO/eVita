@@ -1,0 +1,66 @@
+=== Run information ===
+
+Scheme:weka.classifiers.functions.LinearRegression -S 0 -R 1.0E-8
+Relation:     diabetes-weka.filters.unsupervised.attribute.Remove-R26,29
+Instances:    301
+Attributes:   27
+              code10
+              code21
+              code22
+              code30
+              code31
+              code33
+              code34
+              code35
+              code40
+              code50
+              code51
+              code52
+              code53
+              code54
+              code56
+              code57
+              code58
+              code59
+              code60
+              code70
+              code71
+              code90
+              code91
+              actionCount
+              loginTimeFirstSecond
+              sessionLength
+              actionsPerHour
+Test mode:10-fold cross-validation
+
+=== Classifier model (full training set) ===
+
+
+Linear Regression Model
+
+loginTimeFirstSecond =
+
+     -7.0851 * code10 +
+     24.6264 * code21 +
+    597.643  * code30 +
+   -620.1051 * code31 +
+    754.1389 * code34 +
+   -106.3367 * code35 +
+     46.7325 * code50 +
+    -93.1106 * code51 +
+    -24.8427 * code90 +
+     96.2365
+
+Time taken to build model: 0.02 seconds
+
+=== Cross-validation ===
+=== Summary ===
+
+Correlation coefficient                  0.0499
+Mean absolute error                     90.4414
+Root mean squared error                128.9717
+Relative absolute error                106.3579 %
+Root relative squared error            109.8663 %
+Total Number of Instances              181     
+Ignored Class Unknown Instances                120     
+
