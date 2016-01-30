@@ -100,21 +100,13 @@ As input the Weka tool requires an \code{.arff} file. This is a simple file form
 Based on the research questions a couple of different things have been analysed. The following sections describe the different techniques that have been used.
 
 \subsubsection{Predictors of adherence: First session}
-For this analysis all attributes that only use data of the first session have been used, that means the 'days between sessions' attributes have been removed. First we ranked the attributes on their information gain, for this the \code{InfoGainAttributeEval} attribute evaluator plus the \code{Ranker} search method have been used. This produces a list of the most important attributes. After this a classification has been performed with the \code{ADTree} classifier (using cross-validation, 10 folds). This results in a performance score, confusion matrix and decision tree.
+For this analysis all attributes that only use data of the first session have been used, that means the 'days between sessions' attributes have been removed. First we ranked the attributes on their information gain, for this the \code{InfoGainAttributeEval} attribute evaluator plus the \code{Ranker} search method have been used. This produces a list of the most important attributes. After this a classification has been performed with the \code{ADTree} classifier (using cross-validation, 10 folds). This results in a performance score, confusion matrix and decision tree. A decision tree classifier has been used because this give a good impression of the decision process. It can easily be compared to the ranking of the attributes and can easily be checked for correctness. If for example the top node of the tree would be an attribute like visiting the home page, then this might indicate something is wrong.
 
 \subsubsection{Predictors of adherence: Days between sessions}
-This analysis only uses the attributes that describe the number of days between sessions as input. The \code{BFTree} 
+This analysis only uses the attributes that describe the number of days between sessions as input. Again the \code{InfoGainAttributeEval} attribute evaluator plus the \code{Ranker} search method have been used to rank the attributes. After this the \code{BFTree} classifier has been used. The classifier produced the confusion matrix and decision tree.
 
-
-
-
-
-
-
-
-
-
-
+\subsubsection{Prediction of days between sessions}
+The next question to answer is if we can predict the number of days that will be between session one and two, and between two and three, using the attributes of the first session. For this the \code{LinearRegression} algorithm has been used (with cross-validation, 10 folds). This regression algorithm tries to calculate a formula with which the number of days between the sessions can be calculated, based on the attributes. The algorithm shows performance results such as the correlation coefficient, mean absolute error, root mean squared error, relative absolute error and root relative absolute error. Because the number of days between the first and second session is not known for all users, since some do not have a second session yet, Weka will ignore those instances (a \code{?} is passed as value for the attribute, which means a missing value in the \code{.arff} format). The number of ignored instances will be higher for the days between the second and third session, since even less users have a third session.
 
 
 
