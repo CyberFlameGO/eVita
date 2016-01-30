@@ -45,7 +45,14 @@ To process the given data it first has been saved as a tab separated file from E
 	\item Group the list of actions for a user into Session objects. A Session object holds the user id and a SortedSet of Actions. This involves going through the Actions of a user, and adding them to a Session while the time between them is 30 minutes or less. If there is more time in between then it starts a new session. This will output the following data structure:\\ \code{Map< String, SortedSet<Session> >}. The Session objects are sorted by date, so that the first Session of a user is at the start.
 \end{enumerate}
 
-The described process will deliver an in-memory representation of the data, this helps to detect adherence and determine attributes later. A couple of statistics about the data after the processing of this step can be found in Table~\ref{table:dataStats}. The exact code used for processing the files can be found on GitHub\footnote{https://github.com/NLthijs48/eVita}.
+The described process will deliver an in-memory representation of the data, this helps to detect adherence and determine attributes later. A couple of statistics about the data after the processing of this step can be found in Table~\ref{table:dataStats}. The exact code used for processing the files can be found on GitHub\footnote{https://github.com/NLthijs48/eVita}. A representation of the data layout can be seen in Figure \ref{figure:dataLayout}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=80mm]{dataSmall.png}
+	\caption{In-memory data layout}
+	\label{figure:dataLayout}
+\end{figure}
 
 \begin{table}[]
 	\centering
