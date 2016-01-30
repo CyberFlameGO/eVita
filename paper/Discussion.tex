@@ -1,22 +1,11 @@
 \section{Discussion}
-To mention:
-\begin{itemize}
-	\item Small data set
-\end{itemize}
+The main point to mention is that the dataset provided for this research relatively small making it hard to give a statistically significant accurate prediction.
 
 \subsection{Assumptions}
-Assumptions
-\begin{itemize}
-	\item ...
-\end{itemize}
+As explained earlier, we made the assumption that ‘Logging in 4 times a year’ is interpreted as logging in once every 3 months for the time the user used the application. Since it is possible that a user starting using the application in the last few months of the collected data, this gives a higher accuracy in determining whether or not a user satisfies this requirement.
 
 \subsection{Corrections}
-Corrections
-\begin{itemize}
-	\item ...
-\end{itemize}
+Also mentioned before, we pass '?' to Weka when users do not have enough sessions to calculate the time between the distinct sessions. In this way, Weka ignores these cases giving a higher accuracy.
 
 \subsection{Inconsistencies}
-\begin{itemize}
-	\item ...
-\end{itemize}
+The dataset also contained an information column. This column provided a more detailed explanation for the code used. However, this column was not well defined and contained unclear measurement values without a specification of how to interpret them. Therefore, we ignored these values in our research since it was not able to predict anything with them. Another thing  making this research a bit harder was that the actual platform was down at the moment of investigating its usage. Therefore, we were not able to login and take a deeper look in the platform itself.
