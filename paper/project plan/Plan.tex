@@ -1,2 +1,4 @@
 \section{Plan}
-Plan
+We plan to first read the data with a Java program, which structures the data per user. Then the program also distinguishes sessions and identifies attributes and classes. From the data some attributes have to be extracted, this is something we can do after the data is loaded, when we have some basic statistics about the data (number of users, number of sessions, sessions per user, etcetera). At this point a definition for adherence needs to be determined in order to classify the users as adherent and not adherent.
+
+Next, the Java program can save the attributes and classes to a \code{.arff} file used within Weka. With Weka the analysis of the attributes and classification will be performed. Weka will also be used for calculating linear regression for the number of days between the first sessions.
